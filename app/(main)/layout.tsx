@@ -5,6 +5,7 @@ import { useConvexAuth } from "convex/react";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 import Navigation from "./_components/navigation";
+import { SearchCommand } from "@/components/search-command";
 
 
 const MainLayout = ({
@@ -29,6 +30,7 @@ const MainLayout = ({
     return (
         <div className="h-full flex dark:bg-[#1F1F1F]">
             <Navigation/>
+            <SearchCommand/>
             {children}
         </div>
     )

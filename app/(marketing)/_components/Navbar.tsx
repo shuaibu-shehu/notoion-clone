@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import Logo  from "./Logo";
-import { ModeToggle } from "@/components/dropdown-menu";
+import { ModeToggle } from "@/components/mode-toggle";
 import { useConvexAuth } from "convex/react";
 import { SignInButton, UserButton } from "@clerk/clerk-react";
 import { Spinner } from "@/components/providers/spinner";

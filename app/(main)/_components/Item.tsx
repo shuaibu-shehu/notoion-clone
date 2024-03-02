@@ -2,10 +2,16 @@
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel'
+import { create } from '@/convex/documents';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight, LucideIcon, MoreHorizontal, Trash } from 'lucide-react'
+import { useUser } from '@clerk/clerk-react';
+import { useMutation } from 'convex/react';
+import { ChevronDown, ChevronRight, LucideIcon, MoreHorizontal, Plus, Trash } from 'lucide-react'
+import { useRouter } from 'next/navigation';
 import React from 'react'
+import { toast } from 'sonner';
 
 interface ItemProps {
   id?: Id<'documents'>;
@@ -16,7 +22,7 @@ interface ItemProps {
   level?: number;
   onExpand?: () => void;
   label: string,
-  onClick: () => void,
+  onClick?: () => void,
   icon: LucideIcon
 }
 
@@ -32,9 +38,58 @@ function Item({
   isSearch,
   level = 0,
 }: ItemProps) {
-  const ChevronIcon = expanded ? <ChevronDown /> : <ChevronRight />;
-  return (
-    <div
+
+  const router = useRouter();
+  const create = useMutation(api.documents.create);
+  const archive = useMutation(api.documents.archive);
+  const {user} = useUser();
+
+  const onArchive = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    event.stopPropagation();
+    if (!id) return;
+    const promise = archive({ id })
+      .then(() => router.push("/documents"))
+
+    toast.promise(promise, {
+      loading: "Moving to trash...",
+      success: "Note moved to trash!",
+      error: "Failed to archive note."
+    });
+  };
+
+  const handelExpand = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+    )=>{
+      event.stopPropagation();
+      onExpand?.()
+  }
+
+  const onCreate = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    event.stopPropagation();
+    if (!id) return;
+    const promise = create({ title: "Untitled", parentDocument: id })
+      .then((documentId) => {
+        if (!expanded) {
+          onExpand?.();
+        }
+        // router.push(`/documents/${documentId}`);
+      });
+
+    toast.promise(promise, {
+      loading: "Creating a new note...",
+      success: "New note created!",
+      error: "Failed to create a new note."
+    });
+  };
+
+
+  const ChevronIcon = expanded ? ChevronDown  : ChevronRight ;
+
+  return (<div
       onClick={onClick}
       role='button'
       style={{
@@ -48,8 +103,8 @@ function Item({
       {!!id && (
         <div
           role='button'
-          className='h-full mr-1 rounded-sm hover:bg-neutral-300 dark: bg-neutral-600 '
-          onClick={() => { }}
+          className='h-full mr-1 rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600'
+          onClick={handelExpand}
         >
 
           <ChevronIcon
@@ -73,10 +128,9 @@ function Item({
           <span className="text-xs">⌘</span>K
         </kbd>
       )}
-
-      {/* {!!id && (
-        <div className="ml-auto flex items-center gap-x-2">
-          <DropdownMenu>
+     {!!id && (
+      <div className='ml-auto flex items-center gap-x-2'>
+         <DropdownMenu>
             <DropdownMenuTrigger
               onClick={(e) => e.stopPropagation()}
               asChild
@@ -104,18 +158,19 @@ function Item({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          <div
-            role="button"
-            onClick={onCreate}
-            className="opacity-0 group-hover:opacity-100 h-full ml-auto rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600"
-          >
-            <Plus className="h-4 w-4 text-muted-foreground" />
+          <div 
+          role='button'
+          onClick={onCreate}
+          className='opacity-0 group-hover:opacity-100 h-full ml-auto rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600'>
+            <Plus className=' text-muted-foreground h-4 w-4'/>
           </div>
-        </div>
-      )} */}
+      </div>
+     )
 
-    </div>
-  )
+     } 
+
+    </div>)
+  
 }
 
 export default Item
